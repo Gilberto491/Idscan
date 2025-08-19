@@ -1,0 +1,46 @@
+project:
+  # pode ser absoluto ou relativo ao próprio config.yaml
+  base_dir: ''
+
+# === Onde ler listas ===
+paths:
+  includes: "includes.txt"
+  excludes: "excludes.txt"
+
+# === Opções de varredura ===
+scan:
+  file_exts: [".java"]
+  exclude_dirs: [".git", "target", "build", "out", ".idea", ".settings", ".vscode"]
+  only_main_java: true         # só conta arquivos sob src/main/java
+  include_tests: false         # ignora src/test/java
+  near_window: 5               # raio de linhas para colar validações a campos
+  expand_snake_to_camel: true  # "nr_cic" -> também casa "nrCic"
+  match_locals: true           # habilita variáveis locais
+
+# === Tipagem esperada (para status OK) ===
+types:
+  accepted_field_types: ["String"]     # se campo do alvo for String => OK; senão => ISSUE
+  accepted_param_types: ["String"]     # idem para parâmetros
+  allowed_java: ["Long","Integer","BigInteger","String","Object"]  
+
+# === Regras de validação (ligar/desligar) ===
+rules:
+  field_decl: true
+  param_decl: true
+  annotation: true
+
+# === Colunas do CSV ===
+csv:
+  delimiter: ";"
+  columns:   # marque true/false para exibir
+    Arquivo: true
+    Linha: true
+    Campo: true
+    TabelaClasse: true
+    Tipagem: true
+    Status: true
+    Regra: true
+    Trecho: true
+  relative_paths: true    # mostrar caminho relativo ao diretório-base
+  dedupe: true            # deduplicar entradas (arquivo+linha+campo+regra+tipo)
+  output: "relatorio.csv"
