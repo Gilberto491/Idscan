@@ -12,7 +12,7 @@ _DEFAULT = {
         "file_exts": [".java"],
         "exclude_dirs": [".git", "target", "build", "out", ".idea", ".settings", ".vscode"],
         "only_main_java": True,
-        "include_tests": False,
+        "include_tests": True,
         "near_window": 3,
         "expand_snake_to_camel": True,
     },

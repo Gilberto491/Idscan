@@ -38,7 +38,7 @@ def main():
     oks    = sum(1 for r in rows if r.status == "OK")
     infos  = sum(1 for r in rows if r.status == "INFO")
 
-    print(f"[i] Arquivos .java analisados: {files_scanned}")
+    print(f"[i] Arquivos analisados: {files_scanned}")
     print(f"[✓] Terminado. Linhas: {total} | ISSUE: {issues} | OK: {oks} | INFO: {infos}")
     print(f"[→] CSV gerado: {Path(out_path).resolve()}")
 

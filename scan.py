@@ -138,15 +138,14 @@ def walk_and_scan(base_dir: Path, cfg: Config) -> Tuple[List[Finding], int]:
     pats = compile_patterns(cfg)
     rows: List[Finding] = []
     files_scanned = 0
+    exts = cfg.scan.get("file_exts", [])
 
     for f in base_dir.rglob("*"):
         if any(part in set(map(str, cfg.scan["exclude_dirs"])) for part in f.parts):
             continue
-        if f.is_file() and f.suffix in cfg.scan["file_exts"]:
+        if f.is_file() and (not exts or f.suffix in exts):
             parts = set(p.lower() for p in f.parts)
             if cfg.scan.get("only_main_java", True) and not {"src","main","java"}.issubset(parts): 
-                continue
-            if not cfg.scan.get("include_tests", False) and {"src","test","java"}.issubset(parts):
                 continue
             files_scanned += 1
             rows.extend(analyze_file(f, cfg, pats))
