@@ -40,6 +40,7 @@ def analyze_file(fpath: Path, cfg: Config, pats) -> List[Finding]:
 
     FIELD_DECL  = pats["FIELD_DECL"]
     PARAM_DECL  = pats["PARAM_DECL"]
+    LOCAL_DECL  = pats["LOCAL_DECL"]
     CLASS_DECL  = pats["CLASS_DECL"]
     TABLE_ANN   = pats["TABLE_ANN"]
     ENTITY_ANN  = pats["ENTITY_ANN"]
@@ -59,7 +60,12 @@ def analyze_file(fpath: Path, cfg: Config, pats) -> List[Finding]:
     
     def is_excluded_name(name: str) -> bool:
         return bool(EXC_PATTERN and EXC_PATTERN.search(name or ""))
+    
+    def has_include(pattern, text: str) -> bool:
+        return bool(pattern and pattern.search(text or ""))
 
+    def allowed_context(lines, idx) -> bool:
+        return has_include(ID_PATTERN, lines[idx]) or near_target_identifier(lines, idx, win, ID_PATTERN)
 
     # validações globais (próximas de alvo)
     for idx, line in enumerate(lines):
@@ -68,6 +74,18 @@ def analyze_file(fpath: Path, cfg: Config, pats) -> List[Finding]:
             cls, table = _find_enclosing(lines, idx, CLASS_DECL, TABLE_ANN, ENTITY_ANN)
             F.append(Finding(proj, str(fpath), idx+1, "", table or cls or "", "", "ISSUE", "hibernate_br_cnpj", line.strip()[:300]))
 
+        if LOCAL_DECL:
+            for lm in LOCAL_DECL.finditer(line):
+                if not allowed_context(lines, idx):
+                    continue
+                tp   = lm.group("type")
+                name = lm.group("name")
+                if is_excluded_name(name):
+                    continue
+                cls, table = _find_enclosing(lines, idx, CLASS_DECL, TABLE_ANN, ENTITY_ANN)
+                status = "OK" if _ok_type(tp, is_param=True) else "ISSUE"
+                regra  = "local_string" if status == "OK" else "local_numeric"
+                F.append(Finding(proj, str(fpath), idx+1, name, table or cls or "", tp, status, regra, line.strip()[:300]))
 
         if COLUMN_ANN.search(line) and near_target_identifier(lines, idx, win, ID_PATTERN, EXC_PATTERN):
             args = COLUMN_ANN.search(line).group("args")
@@ -114,7 +132,6 @@ def analyze_file(fpath: Path, cfg: Config, pats) -> List[Finding]:
             status = "OK" if _ok_type(tp, is_param=True) else "ISSUE"
             regra  = "param_string" if status=="OK" else "param_numeric"
             F.append(Finding(proj, str(fpath), idx+1, name, cls, tp, status, regra, line.strip()[:300]))
-
     return F
 
 def walk_and_scan(base_dir: Path, cfg: Config) -> Tuple[List[Finding], int]:

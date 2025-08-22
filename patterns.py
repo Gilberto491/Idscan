@@ -39,17 +39,27 @@ def compile_patterns(cfg):
         rf"\b(?P<type>{TYPES_ALT})\s+(?P<name>[A-Za-z0-9_]*{re_ident_group}[A-Za-z0-9_]*)\b",
         re.I,
     )
+    LOCAL_PATTERN = re.compile(
+        r'\b(?:String|Integer|Long|Double|BigDecimal|Date|boolean|int|float|char)\s+([a-zA-Z_][a-zA-Z0-9_]*)'
+    )
+    LOCAL_DECL = re.compile(
+        rf"""
+        ^\s*                                         
 
-    LOCAL_DECL = None
-    if cfg.scan.get("match_locals", False):
-        LOCAL_DECL = re.compile(
-            rf"(?<!\bclass\s)"
-            rf"(?:final\s+)?"
-            rf"(?P<type>{TYPES_ALT})(?:\s*<[^>]+>)?(?:\[\])*"
-            rf"\s+(?P<name>[A-Za-z0-9_]*{re_ident_group}[A-Za-z0-9_]*)"
-            rf"\s*(=|;)",
-            re.I,
-        )
+        (?!.*\b(private|protected|public)\b)          
+        (?!\s*\bclass\b)(?!\s*\binterface\b)(?!\s*\benum\b) 
+
+        (?P<type>{TYPES_ALT})                         
+            (?:\s*<[^>;]+>)?                          
+            (?:\s*\[\s*\])*                           
+
+        \s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)           
+        (?!\s*\()                                     
+        \s*(=|;)\s*                                   
+        """,
+        re.I | re.X,
+    )
+
 
     CLASS_DECL   = re.compile(r"\bclass\s+(?P<cls>[A-Za-z_]\w*)")
     ENTITY_ANN   = re.compile(r"@Entity\b")
@@ -68,6 +78,7 @@ def compile_patterns(cfg):
         "FIELD_DECL": FIELD_DECL,
         "PARAM_DECL": PARAM_DECL,
         "LOCAL_DECL": LOCAL_DECL,
+        "LOCAL_PATTERN": LOCAL_PATTERN,
         "CLASS_DECL": CLASS_DECL,
         "ENTITY_ANN": ENTITY_ANN,
         "TABLE_ANN": TABLE_ANN,
